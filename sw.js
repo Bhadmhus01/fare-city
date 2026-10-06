@@ -22,8 +22,14 @@ self.addEventListener('fetch', e => {
        then to the cached shell — a daily player never sees a stale game twice */
     e.respondWith(
       fetch(req).then(res => {
-        const copy = res.clone();
-        caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
+        const copy = res.clone(), shell = res.clone();
+        caches.open(CACHE).then(c => {
+          c.put(req, copy).catch(() => {});
+          /* keep the offline shell in step with the build that just loaded — the
+             navigation key and './index.html' are different entries, and a stale
+             one would be served as the offline fallback */
+          c.put('./index.html', shell).catch(() => {});
+        }).catch(() => {});
         return res;
       }).catch(() => caches.match(req).then(hit => hit || caches.match('./index.html')))
     );
