@@ -49,6 +49,7 @@ cd fare-city && ./build.sh          # or: bash build.sh
 | Thing | How |
 |---|---|
 | Steer | drag anywhere on the road, or ← → |
+| First run | pick your home city — all ten are open to choose from |
 | Gas / Brake | the two pedals, or ↑ ↓ |
 | Horn (OWA!) | 📢 or `H` |
 | Hop | ⤴ or `Space` — clears potholes, bumps and cones |
@@ -68,9 +69,11 @@ Scoring rules that matter:
   stop and they get off at the next one anyway, pay half, and your combo resets.
 * **Horn near people** (okada, boda, tuk-tuk, pedestrians, hawkers) scatters them
   and builds a combo up to **x4**. Every OWA! is credits.
-* **Crews hold your stop.** Every city's street has its own crew — Lagos
-  **agberos**, Accra **mates**, Nairobi **manambas**, Cairo's *sarfagi*, Mumbai's
-  *khalasi*, London's *fare dodgers*, New York's *touts*. While they are at a
+* **Crews hold your stop** — and every city's crew is its own local phenomenon:
+  Lagos **agberos**, Accra **trotro mates**, Nairobi **manambas** (the touts who
+  hang out of the matatu door), Cairo's **sarfagi**, Cape Town's **gaartjie**,
+  Mumbai's **khalasi**, Jakarta's **Pak Ogah**, Bangkok's **noodle cart**, London's
+  **scaffold crew**, New York's **tour group**. While they are at a
   stop they block boarding and skim a cut of your fare every second. Horn them
   off and they scatter for good, paying you a tip and +2 combo. They take 6% of a
   fare per second while they hold you, so horn early — and if you ignore them
@@ -146,6 +149,44 @@ cost to get there:
 
 ---
 
+## Any city is your city (Phase 3)
+
+The game used to *start* in Lagos and *earn* the rest of the world. That is the
+wrong first sentence for a game that claims to be for everybody: a player in
+Nairobi, Mumbai or New York opened it and was told they were a guest.
+
+Now you pick. **Every city is open from the first tap** — your home city — and the
+other nine unlock on stars exactly as before. The bus, the crew, the street, the
+radio and the currency are the same in all ten; what changes is whose game it is.
+
+* **Pick your home** (one screen, all ten tiles with country, vehicle, currency
+  and route count). Lagos is the default for a brand-new save, but nothing forces
+  it. You can move home later from Settings → *Change home city*, and the city you
+  leave gates again — no free unlocks.
+* **Every run ends with a postcard from the place you drove**: the vehicle, the
+  currency, the radio station, what the horn says, who holds the stop, what people
+  shout when they get off (with the English), the last stop in its own script, and
+  the city's signature trick. It has a stamp, and a share button. This is the piece
+  that travels in a group chat — the same card in Cairo and Cape Town.
+* **The daily run is a world event.** Everyone gets the same route for the day (the
+  server picks it), and the board tells you how many drivers have played today.
+  Best of all: **the leading line is a ghost you can race.** The server keeps the
+  best daily driver's line (a distance sample every half second, validated against
+  the route's length), and while you drive you see a marker on your route bar with
+  the live gap — *🌍 +142m* behind, *🌍 38m up* ahead. One line per day is stored,
+  not one per player, and it is dropped automatically when a better run lands.
+* **Share text carries local speech.** The ticket you send says *Ẹ ṣé! (Thank
+  you!)* in Lagos, *شكراً! (Thank you!)* in Cairo — so the thing you post is a
+  little piece of somewhere, not a scoreboard screenshot.
+
+Server additions: `GET /api/daily` now reports `runsToday` / `drivers`,
+`GET /api/ghost?key=` returns the day's leading line, and `POST /api/score` accepts
+a `trail`. A daily claim is pinned to **today's exact route** — posting a fat run
+from an easier city and labelling it your daily is rejected (tested in
+`qa/world-race.js`).
+
+---
+
 ## Native script, honestly
 
 Stop names and city names render in their own script where it matters:
@@ -171,7 +212,7 @@ Every city is one data block. Nothing in the engine knows the word "Lagos".
 | Vehicle | Danfo | Trotro | Matatu | Microbus | Minibus taxi | BEST bus | Angkot | City bus | Routemaster | MTA bus |
 | Currency | ₦ | GH₵ | KSh | E£ | R | ₹ | Rp | ฿ | £ | $ |
 | Horn call | OWA! | Ta! Ta! | Beep! Beep! | Beep beep! | Tu! Tu! | Pom! Pom! | Tiiin! | Peep! Peep! | Beep! | HONK! |
-| Crew | agbero | mate | manamba | sarfagi | gaartjie | khalasi | kenek | rot tu | fare dodger | tout |
+| Crew | Agbero | Trotro mate | Manamba | Sarfagi | Gaartjie | Khalasi | Pak Ogah | Noodle cart | Scaffold crew | Tour group |
 | Signature | Conductor's cut | Mate's call | Graffiti pride | Full house | Rank discipline | Two bells | Three in one | Merit | Congestion-free | Express run |
 | Script | Yorùbá | – | – | العربية | – | देवनागरी | – | ไทย | – | – |
 | Station | Wazobia FM | Joy FM | Ghetto Radio | Nile FM | Good Hope FM | Radio Mirchi | Prambors | Cool Fahrenheit | Time Out Radio | Hot 97 |

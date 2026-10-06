@@ -279,6 +279,40 @@ button{min-height:var(--tap)}
 #rotateHint .big{display:block;font-size:46px;line-height:1;margin-bottom:12px;color:var(--y)}
 #rotateHint .sub{display:block;margin-top:8px;font-size:11px;letter-spacing:.04em;opacity:.65;text-transform:none}
 @media (orientation:landscape) and (max-height:560px){ #rotateHint{display:grid} }
+
+/* ---- choose-your-home-city tiles ---- */
+.wheretile{display:flex;gap:11px;align-items:center;padding:12px;border-radius:15px;width:100%;text-align:left;
+  background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.1);color:var(--cream)}
+.wheretile:active{transform:translateY(2px)}
+.wheretile.here{background:rgba(255,210,61,.16);box-shadow:inset 0 0 0 2.5px var(--y)}
+.wheretile .fl{font-size:27px;line-height:1}
+.wheretile b{display:block;font-size:15.5px;font-weight:900;letter-spacing:-.01em}
+.wheretile .mt{display:block;font-size:11px;opacity:.66;margin-top:1px}
+
+/* ---- postcard shown after every run: the place you just drove ---- */
+.postcard{position:relative;border-radius:14px;margin:0;padding:15px 15px 13px;overflow:hidden;color:#2A2418;
+  background:linear-gradient(160deg,#FFFAEE,#F2E6CC);box-shadow:0 6px 0 rgba(0,0,0,.3);
+  border:1px solid rgba(42,36,24,.15)}
+.postcard:before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(135deg,rgba(42,36,24,.05) 0 2px,transparent 2px 7px)}
+.postcard .pcstamp{position:absolute;top:11px;right:11px;width:50px;height:58px;border:2px dashed rgba(42,36,24,.4);
+  border-radius:6px;display:grid;place-items:center;font-size:23px;background:rgba(255,255,255,.4);transform:rotate(6deg)}
+.postcard h4{margin:0 0 1px;font-size:15px;font-weight:900;letter-spacing:.02em;text-transform:uppercase;padding-right:56px}
+.postcard .pcsub{font-size:11px;opacity:.62;padding-right:56px;margin-bottom:3px}
+.postcard .pcrow{display:flex;gap:9px;align-items:baseline;margin-top:7px;font-size:12.5px;line-height:1.45}
+.postcard .pcrow>b{flex:0 0 78px;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;opacity:.6}
+.postcard .pcrow .nat{font-size:15px;font-weight:900}
+.postcard .pcsay{font-weight:900}
+.postcard .pcsay i{font-style:normal;font-weight:700;opacity:.6}
+.postcard .pcshare{margin-top:11px;width:100%}
+
+/* ---- the world's best today, on your route bar ---- */
+#ghost{position:absolute;top:-3px;left:0;display:none;pointer-events:none}
+#ghost.on{display:block}
+#ghost .pin{position:absolute;left:-6px;top:-3px;width:12px;height:12px;border-radius:50%;background:#9A86FF;
+  box-shadow:0 0 0 2px rgba(255,255,255,.8),0 0 10px rgba(154,134,255,.8)}
+#ghost .d{position:absolute;left:-40px;top:9px;width:80px;text-align:center;font-size:8.5px;font-weight:900;
+  letter-spacing:.04em;color:#CFC4FF;text-shadow:0 1px 2px rgba(0,0,0,.6)}
 </style>
 </head>
 <body>
@@ -287,11 +321,11 @@ button{min-height:var(--tap)}
 <div class="ui" id="ui">
 <!-- ============================ BOOT ============================ -->
 <div class="screen on" id="scr-boot" style="align-items:center;justify-content:center;text-align:center;gap:14px">
-  <div style="font-size:13px;font-weight:900;letter-spacing:.34em;color:var(--y);text-transform:uppercase">Lagos · 05:40</div>
+  <div style="font-size:13px;font-weight:900;letter-spacing:.34em;color:var(--y);text-transform:uppercase" id="bootKicker">One bus · ten cities</div>
   <h1 style="font-size:64px;text-shadow:0 5px 0 rgba(0,0,0,.4)">Fare<br><span class="hl">City</span></h1>
   <div class="sub" id="bootTag" style="max-width:300px">One bus. Every city.<br>Load them, drop them, collect your money.</div>
   <div style="display:flex;gap:8px;margin-top:4px">
-    <span class="chip">🇳🇬 Lagos to start</span><span class="chip d">10 cities</span>
+    <span class="chip" id="bootWhere">🌍 10 cities · pick yours</span><span class="chip d">No ads · offline</span>
   </div>
   <button class="btn" id="btnStart" style="max-width:300px;margin-top:12px">Tap to drive</button>
   <div class="row" style="gap:8px;margin-top:2px">
@@ -307,7 +341,7 @@ button{min-height:var(--tap)}
   <div class="hudtop">
     <div class="stub touch" id="hudRoute" style="flex:1">
       <div class="route" id="hudRouteName">Ojuelegba → Yaba</div>
-      <div class="prog"><i id="hudProg" style="width:0%"></i><div id="hudTicks" style="position:absolute;inset:0"></div></div>
+      <div class="prog"><i id="hudProg" style="width:0%"></i><div id="hudTicks" style="position:absolute;inset:0"></div><div id="ghost"><div class="pin"></div><div class="d" id="ghostD"></div></div></div>
       <div class="row b" style="margin-top:6px">
         <span id="cityTag" style="font-size:10.5px;font-weight:900;letter-spacing:.08em">🇳🇬 LAGOS</span>
         <span id="hudNext" style="font-size:10.5px;font-weight:800;opacity:.75">Next: …</span>
@@ -339,6 +373,18 @@ button{min-height:var(--tap)}
 </div>
 
 <!-- ============================ HOME ============================ -->
+<div class="screen" id="scr-where">
+  <div style="text-align:center;margin:10px 0 0">
+    <div class="lbl" style="letter-spacing:.2em">Step one</div>
+    <h2 style="font-size:25px;margin:5px 0 3px">Where do you drive first?</h2>
+    <div class="sub" style="max-width:330px;margin:0 auto">Your home city is open from the start — free. The other nine unlock as you earn stars, and your bus travels with you.</div>
+  </div>
+  <div class="scroll grow" style="margin:14px -4px 0;padding:0 4px 14px">
+    <div class="grid" id="whereList"></div>
+    <div class="tiny" style="text-align:center;margin-top:12px;opacity:.55">Not here yet? Every city is one data pack. Ask for your street.</div>
+  </div>
+</div>
+
 <div class="screen" id="scr-home" style="padding:14px 14px 12px">
   <div class="topline">
     <div class="brand">Fare City <small id="homeCityLbl">Lagos pilot</small></div>
@@ -373,6 +419,7 @@ button{min-height:var(--tap)}
           <div class="lbl">📅 Daily run · one shot</div>
           <div style="font-weight:900;font-size:14.5px;margin-top:2px" id="dailyTitle">—</div>
           <div class="tiny" id="dailySub">—</div>
+        <div class="tiny" id="dailyLive" style="margin-top:4px;color:#CFC4FF;font-weight:800"></div>
         </div>
         <button class="btn sm" id="btnDaily" style="width:auto">Drive</button>
       </div>
@@ -412,7 +459,7 @@ button{min-height:var(--tap)}
 <div class="screen" id="scr-map">
   <button class="ico x" data-back="scr-home">✕</button>
   <h2 style="margin-bottom:2px">The world</h2>
-  <div class="sub">Start in Lagos. Earn stars, ship your bus to new cities. The map scales with you.</div>
+  <div class="sub">Your home city is open. Earn stars to ship your bus around the world — 90 of them, ten cities.</div>
   <div class="scroll grow" style="margin:12px -4px 0;padding:0 4px 14px">
     <div class="ticket glass" style="margin-bottom:10px">
       <div class="row b"><span class="tiny" id="mapProgress">Lagos pilot · 0 of 90 stars</span>
@@ -420,8 +467,8 @@ button{min-height:var(--tap)}
     </div>
     <div class="grid" id="cityList"></div>
     <div class="ticket glass" style="margin-top:10px;text-align:center">
-      <div class="tiny">Missing your city? Every city is a data pack — bus, streets, slang, currency, radio.
-      It is one file to add one. Ask for your street.</div>
+      <div class="tiny">Missing your city? Every city is a data pack — bus, streets, slang, currency, radio, crew.
+      One file adds one. Ask for your street.</div>
     </div>
   </div>
 </div>
@@ -521,7 +568,8 @@ button{min-height:var(--tap)}
       <div class="lbl" style="color:var(--y);opacity:1;margin-bottom:5px">New in your world</div>
       <div id="resUnlockTxt" style="font-size:12.5px;font-weight:700;line-height:1.5"></div>
     </div>
-    <div class="row b" style="margin-top:13px;gap:8px">
+    <div id="postcard" style="margin-top:12px"></div>
+      <div class="row b" style="margin-top:13px;gap:8px">
       <button class="btn sm ghost" id="btnShareRes" style="flex:1">📤 Ticket</button>
       <button class="btn sm green" id="btnPost" style="flex:1">Post score</button>
     </div>
@@ -547,14 +595,14 @@ button{min-height:var(--tap)}
         <b>Drop them at their stop to get paid</b>
         <span>Every passenger has a destination shown on the left. Stop there and they pay. Skip it and conductor vex — half fare, no tip.</span></div></div>
       <div class="setrow"><b style="font-size:22px;width:34px">3</b><div class="grow">
-        <b>Press horn for OWA!</b>
-        <span>Honk near okada, hawkers and pedestrians to scatter them and build combo. Every 5 calls the multiplier climbs. Max fare index.</span></div></div>
+        <b>Press horn for <span id="howHorn">OWA!</span></b>
+        <span>Honk near riders, hawkers and pedestrians to scatter them and build combo. Every few calls the multiplier climbs. <span id="howHornLine"></span></span></div></div>
       <div class="setrow"><b style="font-size:22px;width:34px">4</b><div class="grow">
         <b>Swipe up to hop</b>
         <span>Hop potholes, speed bumps and barriers. One press, bus jumps. Potholes on the ground hurt the bus and slow you down.</span></div></div>
       <div class="setrow"><b style="font-size:22px;width:34px">5</b><div class="grow">
         <b>Horn the crew off your stop</b>
-        <span>Every city has its own people who work the stops — agberos in Lagos, matatu touts in Nairobi, a dabbawala with crates in Mumbai. While they hold the yellow box they take a slice of every fare and nobody boards. Horn them off and they run, and you keep the money.</span></div></div>
+        <span>Every city has its own people who work the stops — <span id="howCrew">agberos in Lagos, matatu touts in Nairobi, dabbawalas in Mumbai</span>. While they hold the yellow box they take a slice of every fare and nobody boards. Horn them off, or wait them out, and the stop is yours. <span id="howCrewLine"></span></span></div></div>
       <div class="setrow"><b style="font-size:22px;width:34px">6</b><div class="grow">
         <b>Ride out city conditions</b>
         <span>Rain in Lagos, khamsin dust in Cairo, monsoon in Mumbai, Songkran in Bangkok, a Tube strike in London. Each one changes grip, traffic, visibility or how many people want your bus, for about twenty seconds. The radio always warns you.</span></div></div>
@@ -676,6 +724,7 @@ button{min-height:var(--tap)}
       <button class="btn ghost sm" id="btnWipe">Reset progress</button>
     </div>
     <button class="btn sm ghost" id="btnGoAcct2" style="margin-top:10px">👤 Account, cloud save &amp; world board</button>
+    <button class="btn ghost sm" id="btnGoWhere" style="margin-top:8px">🌍 Change home city</button>
     <div class="ticket glass" style="margin-top:12px">
       <div class="tiny"><b>Fare City</b> v1.0 · offline-first · data packs for 10 cities and 30 routes out of the box.
       Leaderboard is local; flip one switch in the code to point it at a live API.</div>
@@ -1080,8 +1129,9 @@ const STREET = {
       'Jogoo Rd':'Njia ya Jogoo' },
     talk:{ board:'Karibu, ingia!', boardEn:'Welcome, get in!', thanks:'Asante sana!', thanksEn:'Thank you!',
       miss:'Umenipita!', missEn:'You have passed me!', horn:'Beep! Beep!' },
-    crew:{ emoji:'🧑🏿‍🦱', name:'Matatu tout', nameLocal:'Tout', count:3, toll:0.05,
-      line:'Twende, twende!', lineEn:'Let us move!', tip:1.6, scatter:'Touts zimekimbia!' },
+    crew:{ emoji:'🧑🏿‍🦱', name:'Manamba', nameLocal:'Manamba', count:3, toll:0.05,
+      line:'Twende, twende!', lineEn:'Let us move! (the matatu tout who hangs out of the door)', tip:1.6,
+      scatter:'Manamba zimekimbia!' },
     events:[
       { id:'kanjo',  emoji:'🚨', name:'Kanjo raid', nameEn:'Council askaris raid the stage', dur:17,
         effects:{ checkpoint:2.2 } },
@@ -1102,8 +1152,9 @@ const STREET = {
       'Roxy':'روكسي','Stadium':'الاستاد','Nasr City':'مدينة نصر' },
     talk:{ board:'يلا، يلا!', boardEn:'Hurry, hurry!', thanks:'شكراً!', thanksEn:'Thank you!',
       miss:'عدّيت الموقف!', missEn:'You passed my stop!', horn:'بييب بييب' },
-    crew:{ emoji:'🧔🏻‍♂️', name:'Microbus caller', nameLocal:'مُنادي الميكروباص', count:3, toll:0.05,
-      line:'رَمْسيس، رَمْسيس!', lineEn:'Ramses, Ramses!', tip:1.55, scatter:'المنادي جري!' },
+    crew:{ emoji:'🧔🏻‍♂️', name:'Sarfagi', nameLocal:'صرفجي', count:3, toll:0.05,
+      line:'رَمْسيس، رَمْسيس!', lineEn:'Ramses, Ramses! (the caller who works the microbus door)', tip:1.55,
+      scatter:'الصرفجي جري!' },
     events:[
       { id:'khamsin', emoji:'🌪️', name:'خماسين (Khamsin)', nameEn:'Khamsin dust storm', dur:18,
         effects:{ visibility:0.5, grip:0.9 } },
@@ -1146,8 +1197,9 @@ const STREET = {
       'Regal':'रीगल','Colaba':'कुलाबा' },
     talk:{ board:'चलो, बैठो!', boardEn:'Come, sit!', thanks:'धन्यवाद!', thanksEn:'Thank you!',
       miss:'मेरा स्टॉप आ गया!', missEn:'My stop has come!', horn:'पों पों' },
-    crew:{ emoji:'🧑🏽', name:'Dabbawala', nameLocal:'डब्बावाला', count:4, toll:0.04,
-      line:'जगह है, आ जाओ!', lineEn:'There is room, come!', tip:1.5, scatter:'डब्बे उठ गए!' },
+    crew:{ emoji:'🧑🏽', name:'Khalasi', nameLocal:'खलासी', count:4, toll:0.04,
+      line:'जगह है, आ जाओ!', lineEn:'There is room, come! (the conductor\'s mate at the door)', tip:1.5,
+      scatter:'खलासी भाग गया!' },
     events:[
       { id:'monsoon', emoji:'🌧️', name:'मानसून (Monsoon)', nameEn:'Monsoon downpour — craters hidden', dur:20,
         effects:{ grip:0.6, visibility:0.6, hazards:['flood','pothole'] } },
@@ -1398,7 +1450,9 @@ function routeReqStars(i){ return [0,2,4][i] || 99; }
 /* ---------------- progression ---------------- */
 function totalStars(){ let n=0; for (const k in save.routeStars) n += save.routeStars[k]; return n; }
 function cityStars(cityId){ const c=cityById(cityId); let n=0; c.routes.forEach(r=>n += save.routeStars[r.id]||0); return n; }
-function cityOpen(c){ return !c.starsReq || totalStars() >= c.starsReq; }
+/* your home city is always open: whatever you picked at the start is yours to
+   drive, wherever in the world you are. the rest unlock on stars. */
+function cityOpen(c){ return !c.starsReq || c.id === save.home || totalStars() >= c.starsReq; }
 function routeOpen(c, i){ return i===0 || cityStars(c.id) >= routeReqStars(i); }
 function nextCity(){ return CITY_PACKS.filter(c=>!cityOpen(c)).sort((a,b)=>a.starsReq-b.starsReq)[0]; }
 function rankOf(){ let r=RANKS[0]; RANKS.forEach(x=>{ if(totalStars()>=x.at) r=x; }); return r; }
@@ -1418,6 +1472,7 @@ function blankSave(){
     routeStars:{}, cityBest:{}, parts:{engine:0,brakes:0,tyres:0,horn:0,seats:0,tank:0},
     visited:{lagos:true}, missions:{date:'', list:[]}, mprog:{},
     streak:0, lastDay:'', runs:[], total:{runs:0,pax:0,credits:0,dist:0,owa:0,sigs:0},
+    home:'', pickedHome:0,
     lang:'en', acct:null, cloudAt:0, daily:{key:'',done:false,score:0,rank:0},
     set:{sfx:1,music:1,auto:1,left:0,calm:0,buzz:1,mv:70,sv:80,script:1},
     cookie:false, seenHow:false
@@ -1431,6 +1486,10 @@ function loadGame(){
     save.daily = Object.assign(blankSave().daily, p.daily||{});
     save.parts = Object.assign(blankSave().parts, p.parts||{});
   } }catch(e){}
+  /* saves from before home cities existed: keep Lagos, never re-ask a player
+     who has already made progress */
+  if (!save.home) save.home = 'lagos';
+  if (!save.pickedHome && (save.total.runs > 0 || totalStars() > 0)) save.pickedHome = 1;
   LANG = save.lang || 'en';
 }
 function persist(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }catch(e){} }
@@ -1590,8 +1649,9 @@ function postWorldScore(entry){
 
 /* ---------------- share ---------------- */
 function shareText(o){
-  return t('shareText', {v:money(o.credits||0, cityById(o.city)), bus:cityById(o.city).vehicle,
-    city:cityById(o.city).name, idx:idx(o.idx||0)});
+  const c = cityById(o.city), st = c.street || {}, tk = st.talk || {};
+  const phrase = tk.thanks ? '  ' + tk.thanks + ' (' + (tk.thanksEn || '') + ')' : '';
+  return t('shareText', {v:money(o.credits||0, c), bus:c.vehicle, city:c.name, idx:idx(o.idx||0)}) + phrase;
 }
 function doShare(o){
   const txt = shareText(o);
@@ -1666,6 +1726,16 @@ async function netPostScore(payload){
   if (!netAvailable()) return null;
   try{ return await netCall('/score', { method:'POST', body:payload }); }
   catch(e){ NET.err = e; return null; }
+}
+/* today's world-leading line, so you can race it (server holds it per daily key) */
+async function netGhost(key){
+  if (!netAvailable()) return null;
+  try{ return await netCall('/ghost?scope=daily&key=' + encodeURIComponent(key)); }
+  catch(e){ return null; }
+}
+async function netDailyInfo(){
+  if (!netAvailable()) return null;
+  try{ return await netCall('/daily'); }catch(e){ return null; }
 }
 async function netBoard(city, scope){
   if (!netAvailable()) return null;
@@ -2611,6 +2681,8 @@ function startRun(cityId, routeIndex){
   G.idle = 0; G.topCombo = 1; G.perfectStops = 0; G.spawnedTo = 700; G.npcTo = 500;
   G.paxDropped = 0; G.boardQueue = 0; G.boardAcc = 0; G.waveN = 0; G.potholeSlow = 0;
   G.maxPax = 0; G.boardHorn = 0; G.crewsTax = 0; G.crewScattered = 0; G.sigDone = null;
+  G.trail = []; G.trailAcc = 0; G.ghost = null;      /* your line, and the world's best */
+  const gh = $('#ghost'); if (gh) gh.classList.remove('on');
   G.ev = null; G.evLeft = 0; G.evFx = {}; G.evT = 14 + rnd(0, 10);
   G.daySeed = hashStr(city.id + route.id + todayKey());
   G.sky = makeSkyline(city, G.daySeed); G.road = makeRoadside(city, G.daySeed);
@@ -3104,7 +3176,32 @@ function update(dt){
       p.mood = 2; buildHudSeats(); missPax(p);
     }
   });
+  if (G.dailyRun && G.trail.length < 1200){
+    G.trailAcc += dt;
+    if (G.trailAcc >= 0.5){ G.trailAcc -= 0.5; G.trail.push(Math.round(G.dist)); }
+  }
   updateHud();
+}
+/* ---------------- the world's best, on your route bar ----------------
+   The daily run is one route for everybody. The server keeps the leading line of
+   that route (a distance sample every half second); we race it live. */
+function ghostAt(t){
+  const tr = G.ghost && G.ghost.trail;
+  if (!tr || tr.length < 2) return null;
+  const x = t / 0.5, i = Math.floor(x);
+  if (i >= tr.length - 1) return tr[tr.length - 1];
+  return tr[i] + (tr[i+1] - tr[i]) * (x - i);
+}
+function updateGhost(){
+  const el = $('#ghost'); if (!el) return;
+  if (!G.dailyRun || G.mode !== 'run' || !G.ghost){ el.classList.remove('on'); return; }
+  const d = ghostAt(G.t);
+  if (d == null){ el.classList.remove('on'); return; }
+  el.style.left = (clamp(d / G.routeLen, 0, 1) * 100).toFixed(2) + '%';
+  el.classList.add('on');
+  const gap = d - G.dist, m = Math.round(Math.abs(gap) / UNITS_PER_M);
+  const lbl = $('#ghostD');
+  if (lbl) lbl.textContent = gap > 0 ? '🌍 +' + m + 'm' : '🌍 ' + m + 'm up';
 }
 let hudCache = {};
 function hudCond(title, sub){
@@ -3131,6 +3228,7 @@ function updateHud(){
   if (hudCache.kmh !== kmh){ $('#hudSpeed').textContent = kmh; hudCache.kmh = kmh; }
   const frac = clamp(G.dist / G.routeLen, 0, 1) * 100;
   $('#hudProg').style.width = frac.toFixed(1) + '%';
+  updateGhost();
   const money1 = money(G.credits, G.city);
   if (hudCache.money !== money1){ $('#fare').innerHTML = money1 + '<small id="fareLbl">' + t('fare').toUpperCase() + '</small>'; hudCache.money = money1; }
   const nxt = G.stops[Math.min(G.stopI, G.stops.length-1)];
@@ -3252,8 +3350,38 @@ function banner(msg){
   clearTimeout(bannerTimer); bannerTimer = setTimeout(()=>{ el.classList.remove('on'); }, 1800);
 }
 /* ------------------------------------------------------------------ HOME */
+/* ---------------- home city: yours from the first tap ---------------- */
+function renderWhere(){
+  const list = $('#whereList'); if (!list) return;
+  list.innerHTML = CITY_PACKS.map(function(c){
+    const here = save.home === c.id;
+    const state = here ? 'HOME' : (cityOpen(c) ? 'OPEN' : c.starsReq + '★');
+    return '<button class="wheretile' + (here ? ' here' : '') + '" data-city="' + c.id + '">' +
+      '<span class="fl">' + c.flag + '</span>' +
+      '<span class="grow"><b>' + c.name + '</b><span class="mt">' + (c.country || '') + ' · ' + c.vehicle + ' · ' +
+        c.cur.sym + ' ' + c.cur.code + ' · ' + c.routes.length + ' routes</span></span>' +
+      '<span class="chip' + (here ? ' y' : '') + '" style="flex:0 0 auto">' + state + '</span></button>';
+  }).join('');
+  $$('#whereList .wheretile').forEach(function(b){ b.onclick = function(){ pickHome(b.dataset.city); }; });
+}
+function pickHome(id){
+  const c = cityById(id);
+  save.home = id; save.pickedHome = 1; save.city = id; persist();
+  renderHome();
+  toast('🏠 Home city · ' + c.flag + ' ' + c.name + ' · ' + c.vehicle +
+    (save.seenHow ? '' : '  — how to play next'), 3200);
+  if (save.seenHow){ show('scr-home'); return; }
+  /* first run: straight into how-to-play, and its ✕ must land on the home screen
+     — the picker is a one-time gate, not somewhere you go back to */
+  save.seenHow = true; persist();
+  show('scr-how');
+  prevScreen = 'scr-home';
+}
+let dailyLive = '';
 function renderHome(){
   const city = cityById(save.city);
+  const hc = cityById(save.home || save.city);
+  if ($('#homeCityLbl')) $('#homeCityLbl').textContent = save.pickedHome ? hc.name + ' · home' : 'pick your city';
   $('#wNaira').textContent = money(save.wallet, city);
   $('#wGlobal').textContent = 'Fare index all-time ' + idx(save.total.credits);
   $('#wStars').textContent = totalStars();
@@ -3302,7 +3430,16 @@ function renderHome(){
   $('#dailySub').innerHTML = played
     ? 'Played today · fare index <b>' + idx(save.daily.score) + '</b>' + (save.daily.rank ? ' · world #' + save.daily.rank : '') +
       ' · resets in ' + dailyMsLeft()
-    : 'Whole world, same route, one attempt · resets in ' + dailyMsLeft();
+    : '🌍 The whole world drives this route today · one attempt · resets in ' + dailyMsLeft();
+  if ($('#dailyLive')) $('#dailyLive').textContent = dailyLive;
+  if (netAvailable() && !played){
+    netDailyInfo().then(function(info){
+      if (!info || !info.runsToday) return;
+      dailyLive = '🌍 ' + info.runsToday + ' run' + (info.runsToday === 1 ? '' : 's') + ' today by ' +
+        info.drivers + ' driver' + (info.drivers === 1 ? '' : 's');
+      if ($('#dailyLive')) $('#dailyLive').textContent = dailyLive;
+    });
+  }
   const dbtn = $('#btnDaily');
   dbtn.textContent = played ? 'Done' : 'Drive';
   dbtn.className = 'btn sm' + (played ? ' ghost' : '');
@@ -3437,6 +3574,17 @@ function legendRows(c){
 }
 function renderHow(){
   $('#howLegend').innerHTML = legendRows(cityById(save.city));
+  /* the tutorial speaks in your city's words: a Nairobi player reads "manambas",
+     not "agberos". Small thing, but it is the difference between visiting and living here. */
+  const hc = cityById(save.home || save.city), st = hc.street || {}, tk = st.talk || {};
+  if ($('#howHorn')) $('#howHorn').textContent = (hc.slang && hc.slang.horn) || 'OWA!';
+  if ($('#howHornLine')) $('#howHornLine').textContent = tk.horn
+    ? 'Here the street answers “' + tk.horn + '”' + (tk.hornEn ? ' (' + tk.hornEn + ')' : '') + '.' : '';
+  if ($('#howCrew')) $('#howCrew').textContent = st.crew
+    ? st.crew.name.toLowerCase() + 's here in ' + hc.name + ' — ' + (st.crew.lineEn || st.crew.line)
+    : 'the people who work the stops';
+  if ($('#howCrewLine')) $('#howCrewLine').textContent = st.crew && st.crew.line
+    ? '“' + st.crew.line + '”' : '';
 }
 /* ------------------------------------------------------------------ GARAGE */
 function renderGarage(){
@@ -3605,6 +3753,7 @@ async function postScoreNow(verbose){
   const payload = { city:G.city.id, route:G.route.id, idx:Math.round(G.credits), stars:G.starsEarned||0,
     pax:G.paxDropped||0, owa:G.owa||0, dist:Math.round(G.dist/UNITS_PER_M), ms:Math.round(G.t*1000),
     combo:G.topCombo||1, sig: G.sigDone ? 1 : 0, daily: G.dailyRun ? dailyPick().key : null,
+    trail: (G.dailyRun && G.trail && G.trail.length > 2) ? G.trail.slice(0, 1200) : null,
     name: save.name, anon: !(save.acct && save.acct.token) };
   if (G.dailyRun){
     save.daily = { key:dailyPick().key, done:true, score:Math.round(G.credits), rank:0 };
@@ -3616,6 +3765,36 @@ async function postScoreNow(verbose){
     if (G.dailyRun){ save.daily.rank = j.rank; persist(); }
     if (verbose || true) toast('Posted · world rank #' + j.rank + ' ' + (j.scope === 'daily' ? 'in today\'s daily run' : 'for ' + cityById(G.city.id).name), 2800);
   } else if (verbose) toast('Could not reach the board — score kept on this phone.', 2400);
+}
+/* ---------------- postcard: the place you just drove ----------------
+   Every run ends with a small piece of a real city — who holds the stop, what the
+   horn says, what people shout when they get off. That is the bit worth sending
+   to a friend, and it is the same card in Lagos, Cairo or New York. */
+function renderPostcard(c, r){
+  const box = $('#postcard'); if (!box) return;
+  const st = c.street, tk = (st && st.talk) || {};
+  const say = [['board', tk.board, tk.boardEn], ['thanks', tk.thanks, tk.thanksEn]]
+    .filter(function(x){ return !!x[1]; })
+    .map(function(x){ return '<span class="pcsay">' + x[1] + ' <i>' + (x[2] || '') + '</i></span>'; })
+    .join('  ·  ');
+  const crew = st && st.crew ? st.crew.name + ' <i>' + (st.crew.lineEn || '') + '</i>' : null;
+  const lastStop = (r.stopsNative && r.stopsNative[r.stopsNative.length - 1]) || r.stops[r.stops.length - 1];
+  box.innerHTML =
+    '<div class="postcard">' +
+      '<div class="pcstamp">' + c.flag + '</div>' +
+      '<h4>Postcard · ' + c.name + '</h4>' +
+      '<div class="pcsub">' + r.name + ' · ' + (c.country || '') + '</div>' +
+      '<div class="pcrow"><b>You drove</b><span>' + c.vehicle + ' · ' + c.cur.sym + ' ' + c.cur.code +
+        ' · ' + c.radio.name + '</span></div>' +
+      '<div class="pcrow"><b>Horn says</b><span class="nat">' + (c.slang ? c.slang.horn : '—') + '</span></div>' +
+      (crew ? '<div class="pcrow"><b>At the stop</b><span>' + crew + '</span></div>' : '') +
+      (say ? '<div class="pcrow"><b>They say</b><span>' + say + '</span></div>' : '') +
+      '<div class="pcrow"><b>Last stop</b><span class="nat sm">' + lastStop + '</span></div>' +
+      (st && st.bonus ? '<div class="pcrow"><b>Local trick</b><span>' + st.bonus.name + ' — ' + st.bonus.desc + '</span></div>' : '') +
+      '<button class="btn ghost sm pcshare" id="btnSharePc">📤 Send this postcard</button>' +
+    '</div>';
+  const b = $('#btnSharePc');
+  if (b) b.onclick = function(){ doShare({ credits:G.credits, city:c.id, idx:G.credits }); };
 }
 function showResult(d){
   const c = G.city, r = G.route;
@@ -3652,6 +3831,7 @@ function showResult(d){
     : 'Next star at <b>' + idx(tg[d.stars] != null ? tg[d.stars] : tg[2]) + '</b> fare index. ' +
       (G.missed ? 'You missed ' + G.missed + ' stop' + (G.missed>1?'s':'') + ' — drop them where they asked.' : 'Use the horn for OWA! combos to stack fare.');
   $('#btnPost').textContent = t('postScore');
+  renderPostcard(c, r);
   show('scr-result');
   renderHome();
   if (G.dailyRun || netAvailable()) postScoreNow(false);
@@ -3768,7 +3948,8 @@ function boot(){
   renderHome();
   $('#btnStart').onclick = function(){
     A.init(); A.resume();
-    if (!save.seenHow){ save.seenHow = true; persist(); show('scr-how'); }
+    if (!save.pickedHome){ renderWhere(); show('scr-where'); }
+    else if (!save.seenHow){ save.seenHow = true; persist(); show('scr-how'); }
     else show('scr-home');
   };
   $('#btnHowBoot').onclick = function(){ save.seenHow = true; persist(); show('scr-how'); };
@@ -3833,6 +4014,7 @@ function boot(){
   /* account + daily wiring */
   $('#btnGoAcct').onclick = function(){ show('scr-account'); };
   $('#btnGoAcct2').onclick = function(){ show('scr-account'); };
+  if ($('#btnGoWhere')) $('#btnGoWhere').onclick = function(){ renderWhere(); show('scr-where'); };
   $('#btnRegister').onclick = doRegister;
   $('#btnLogin').onclick = doLogin;
   $('#btnSignOut').onclick = function(){ acctSignOut(); toast('Signed out. Still playing offline.', 2000); renderAccount(); renderHome(); };
@@ -3869,7 +4051,10 @@ function playDaily(){
   G.dailyRun = true;
   lastPlay = { city:c.id, route:dp.route };
   startRun(c.id, dp.route);
-  toast('📅 Daily run · one shot', 2200);
+  toast('📅 Daily run · one shot · racing the world', 2600);
+  netGhost(dp.key).then(function(g){
+    if (g && g.trail && g.trail.length > 2 && G.dailyRun){ G.ghost = g; }
+  });
 }
 function installApp(){
   if (deferredPrompt){ deferredPrompt.prompt(); deferredPrompt = null; return; }

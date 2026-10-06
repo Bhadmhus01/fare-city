@@ -279,6 +279,40 @@ button{min-height:var(--tap)}
 #rotateHint .big{display:block;font-size:46px;line-height:1;margin-bottom:12px;color:var(--y)}
 #rotateHint .sub{display:block;margin-top:8px;font-size:11px;letter-spacing:.04em;opacity:.65;text-transform:none}
 @media (orientation:landscape) and (max-height:560px){ #rotateHint{display:grid} }
+
+/* ---- choose-your-home-city tiles ---- */
+.wheretile{display:flex;gap:11px;align-items:center;padding:12px;border-radius:15px;width:100%;text-align:left;
+  background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.1);color:var(--cream)}
+.wheretile:active{transform:translateY(2px)}
+.wheretile.here{background:rgba(255,210,61,.16);box-shadow:inset 0 0 0 2.5px var(--y)}
+.wheretile .fl{font-size:27px;line-height:1}
+.wheretile b{display:block;font-size:15.5px;font-weight:900;letter-spacing:-.01em}
+.wheretile .mt{display:block;font-size:11px;opacity:.66;margin-top:1px}
+
+/* ---- postcard shown after every run: the place you just drove ---- */
+.postcard{position:relative;border-radius:14px;margin:0;padding:15px 15px 13px;overflow:hidden;color:#2A2418;
+  background:linear-gradient(160deg,#FFFAEE,#F2E6CC);box-shadow:0 6px 0 rgba(0,0,0,.3);
+  border:1px solid rgba(42,36,24,.15)}
+.postcard:before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(135deg,rgba(42,36,24,.05) 0 2px,transparent 2px 7px)}
+.postcard .pcstamp{position:absolute;top:11px;right:11px;width:50px;height:58px;border:2px dashed rgba(42,36,24,.4);
+  border-radius:6px;display:grid;place-items:center;font-size:23px;background:rgba(255,255,255,.4);transform:rotate(6deg)}
+.postcard h4{margin:0 0 1px;font-size:15px;font-weight:900;letter-spacing:.02em;text-transform:uppercase;padding-right:56px}
+.postcard .pcsub{font-size:11px;opacity:.62;padding-right:56px;margin-bottom:3px}
+.postcard .pcrow{display:flex;gap:9px;align-items:baseline;margin-top:7px;font-size:12.5px;line-height:1.45}
+.postcard .pcrow>b{flex:0 0 78px;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;opacity:.6}
+.postcard .pcrow .nat{font-size:15px;font-weight:900}
+.postcard .pcsay{font-weight:900}
+.postcard .pcsay i{font-style:normal;font-weight:700;opacity:.6}
+.postcard .pcshare{margin-top:11px;width:100%}
+
+/* ---- the world's best today, on your route bar ---- */
+#ghost{position:absolute;top:-3px;left:0;display:none;pointer-events:none}
+#ghost.on{display:block}
+#ghost .pin{position:absolute;left:-6px;top:-3px;width:12px;height:12px;border-radius:50%;background:#9A86FF;
+  box-shadow:0 0 0 2px rgba(255,255,255,.8),0 0 10px rgba(154,134,255,.8)}
+#ghost .d{position:absolute;left:-40px;top:9px;width:80px;text-align:center;font-size:8.5px;font-weight:900;
+  letter-spacing:.04em;color:#CFC4FF;text-shadow:0 1px 2px rgba(0,0,0,.6)}
 </style>
 </head>
 <body>

@@ -249,7 +249,22 @@ const server = http.createServer((req, res) => {
       users:Object.keys(db.users).length, scores:db.scores.length, serverTime:Date.now() });
     return;
   }
-  if (p === '/api/daily'){ json(res, 200, dailyPickServer()); return; }
+  if (p === '/api/daily'){
+    const d = dailyPickServer(), rows = db.scores.filter(r => r.daily === d.key);
+    json(res, 200, Object.assign({}, d, { runsToday: rows.length,
+      drivers: new Set(rows.map(r => r.name)).size }));
+    return;
+  }
+  /* the leading line of today's daily run, so players race the world */
+  if (p === '/api/ghost'){
+    const key = u.searchParams.get('key') || dailyKeyServer();
+    if (key !== dailyKeyServer()){ json(res, 404, { error:'No ghost for that day.' }); return; }
+    const rows = db.scores.filter(r => r.daily === key && Array.isArray(r.trail) && r.trail.length > 2);
+    if (!rows.length){ json(res, 404, { error:'Nobody has posted today yet — you can be the ghost.' }); return; }
+    const lead = rows.reduce((m, r) => (r.idx > m.idx ? r : m), rows[0]);
+    json(res, 200, { name:lead.name, idx:lead.idx, stars:lead.stars, trail:lead.trail, at:lead.at });
+    return;
+  }
 
   if (p === '/api/register' && req.method === 'POST'){
     if (limited('reg:' + ip, 10, 3600e3, ip)){ json(res, 429, { error:'Too many accounts from this network. Try later.' }); return; }
@@ -317,12 +332,34 @@ const server = http.createServer((req, res) => {
       const v = validateRun(b, user);
       if (!v.ok) return json(res, 400, { error:'Run rejected: ' + v.why });
       const name = user || (validName(clean(b.name)) ? clean(b.name) : 'Anon-' + tokenKey(ip).slice(0, 4));
-      const daily = (b.daily && b.daily === dailyKeyServer()) ? b.daily : null;
+      /* a daily claim must be *today's* route, not just today's key — otherwise a
+         player could post a fat run from an easy city and rank it as their daily */
+      let daily = null;
+      if (b.daily && b.daily === dailyKeyServer()){
+        const dp = dailyPickServer();
+        if (v.city.id !== dp.city || v.route.id !== dp.route)
+          return json(res, 400, { error:'Run rejected: not today\'s daily route (' + dp.city + ' / ' + dp.route + ').' });
+        daily = b.daily;
+      }
+      /* a daily run may carry the driver's line (distance every half second) so
+         everyone else can race it. Validate hard, then drop it if it is not the
+         leader — the db keeps one line per daily key, not one per player. */
+      let trail = null;
+      if (daily && Array.isArray(b.trail)){
+        const routeLen = v.route.dist * (v.route.stops.length - 1);
+        trail = b.trail.slice(0, 1200).map(Number).filter(n => isFinite(n) && n >= 0 && n <= routeLen * 1.5);
+        if (trail.length < 3) trail = null;
+      }
       db.scores.push({ name:name, city:v.city.id, route:v.route.id, idx:v.idx, stars:v.stars,
         pax:Math.max(0, Math.round(Number(b.pax) || 0)), owa:Math.max(0, Math.round(Number(b.owa) || 0)),
         dist:Math.max(0, Math.round(Number(b.dist) || 0)), ms:v.ms, combo:Math.min(4, Number(b.combo) || 1),
-        sig: b.sig ? 1 : 0, daily:daily, at:Date.now(), anon: !user });
+        sig: b.sig ? 1 : 0, daily:daily, at:Date.now(), anon: !user, trail:trail });
       if (db.scores.length > 60000) db.scores.splice(0, db.scores.length - 60000);
+      if (daily){
+        const day = db.scores.filter(r => r.daily === daily);
+        const lead = day.reduce((m, r) => (r.idx > m.idx ? r : m), day[0]);
+        day.forEach(r => { if (r !== lead) delete r.trail; });
+      }
       writeDB();
       /* rank: personal best in the city, and career position */
       const cityRows = boardCity(v.city.id);

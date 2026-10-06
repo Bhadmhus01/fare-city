@@ -63,6 +63,16 @@ async function netPostScore(payload){
   try{ return await netCall('/score', { method:'POST', body:payload }); }
   catch(e){ NET.err = e; return null; }
 }
+/* today's world-leading line, so you can race it (server holds it per daily key) */
+async function netGhost(key){
+  if (!netAvailable()) return null;
+  try{ return await netCall('/ghost?scope=daily&key=' + encodeURIComponent(key)); }
+  catch(e){ return null; }
+}
+async function netDailyInfo(){
+  if (!netAvailable()) return null;
+  try{ return await netCall('/daily'); }catch(e){ return null; }
+}
 async function netBoard(city, scope){
   if (!netAvailable()) return null;
   try{ const j = await netCall('/board?city=' + encodeURIComponent(city) + '&scope=' + (scope || 'city'));

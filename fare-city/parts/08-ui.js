@@ -30,8 +30,38 @@ function banner(msg){
   clearTimeout(bannerTimer); bannerTimer = setTimeout(()=>{ el.classList.remove('on'); }, 1800);
 }
 /* ------------------------------------------------------------------ HOME */
+/* ---------------- home city: yours from the first tap ---------------- */
+function renderWhere(){
+  const list = $('#whereList'); if (!list) return;
+  list.innerHTML = CITY_PACKS.map(function(c){
+    const here = save.home === c.id;
+    const state = here ? 'HOME' : (cityOpen(c) ? 'OPEN' : c.starsReq + '★');
+    return '<button class="wheretile' + (here ? ' here' : '') + '" data-city="' + c.id + '">' +
+      '<span class="fl">' + c.flag + '</span>' +
+      '<span class="grow"><b>' + c.name + '</b><span class="mt">' + (c.country || '') + ' · ' + c.vehicle + ' · ' +
+        c.cur.sym + ' ' + c.cur.code + ' · ' + c.routes.length + ' routes</span></span>' +
+      '<span class="chip' + (here ? ' y' : '') + '" style="flex:0 0 auto">' + state + '</span></button>';
+  }).join('');
+  $$('#whereList .wheretile').forEach(function(b){ b.onclick = function(){ pickHome(b.dataset.city); }; });
+}
+function pickHome(id){
+  const c = cityById(id);
+  save.home = id; save.pickedHome = 1; save.city = id; persist();
+  renderHome();
+  toast('🏠 Home city · ' + c.flag + ' ' + c.name + ' · ' + c.vehicle +
+    (save.seenHow ? '' : '  — how to play next'), 3200);
+  if (save.seenHow){ show('scr-home'); return; }
+  /* first run: straight into how-to-play, and its ✕ must land on the home screen
+     — the picker is a one-time gate, not somewhere you go back to */
+  save.seenHow = true; persist();
+  show('scr-how');
+  prevScreen = 'scr-home';
+}
+let dailyLive = '';
 function renderHome(){
   const city = cityById(save.city);
+  const hc = cityById(save.home || save.city);
+  if ($('#homeCityLbl')) $('#homeCityLbl').textContent = save.pickedHome ? hc.name + ' · home' : 'pick your city';
   $('#wNaira').textContent = money(save.wallet, city);
   $('#wGlobal').textContent = 'Fare index all-time ' + idx(save.total.credits);
   $('#wStars').textContent = totalStars();
@@ -80,7 +110,16 @@ function renderHome(){
   $('#dailySub').innerHTML = played
     ? 'Played today · fare index <b>' + idx(save.daily.score) + '</b>' + (save.daily.rank ? ' · world #' + save.daily.rank : '') +
       ' · resets in ' + dailyMsLeft()
-    : 'Whole world, same route, one attempt · resets in ' + dailyMsLeft();
+    : '🌍 The whole world drives this route today · one attempt · resets in ' + dailyMsLeft();
+  if ($('#dailyLive')) $('#dailyLive').textContent = dailyLive;
+  if (netAvailable() && !played){
+    netDailyInfo().then(function(info){
+      if (!info || !info.runsToday) return;
+      dailyLive = '🌍 ' + info.runsToday + ' run' + (info.runsToday === 1 ? '' : 's') + ' today by ' +
+        info.drivers + ' driver' + (info.drivers === 1 ? '' : 's');
+      if ($('#dailyLive')) $('#dailyLive').textContent = dailyLive;
+    });
+  }
   const dbtn = $('#btnDaily');
   dbtn.textContent = played ? 'Done' : 'Drive';
   dbtn.className = 'btn sm' + (played ? ' ghost' : '');
@@ -215,6 +254,17 @@ function legendRows(c){
 }
 function renderHow(){
   $('#howLegend').innerHTML = legendRows(cityById(save.city));
+  /* the tutorial speaks in your city's words: a Nairobi player reads "manambas",
+     not "agberos". Small thing, but it is the difference between visiting and living here. */
+  const hc = cityById(save.home || save.city), st = hc.street || {}, tk = st.talk || {};
+  if ($('#howHorn')) $('#howHorn').textContent = (hc.slang && hc.slang.horn) || 'OWA!';
+  if ($('#howHornLine')) $('#howHornLine').textContent = tk.horn
+    ? 'Here the street answers “' + tk.horn + '”' + (tk.hornEn ? ' (' + tk.hornEn + ')' : '') + '.' : '';
+  if ($('#howCrew')) $('#howCrew').textContent = st.crew
+    ? st.crew.name.toLowerCase() + 's here in ' + hc.name + ' — ' + (st.crew.lineEn || st.crew.line)
+    : 'the people who work the stops';
+  if ($('#howCrewLine')) $('#howCrewLine').textContent = st.crew && st.crew.line
+    ? '“' + st.crew.line + '”' : '';
 }
 /* ------------------------------------------------------------------ GARAGE */
 function renderGarage(){
@@ -383,6 +433,7 @@ async function postScoreNow(verbose){
   const payload = { city:G.city.id, route:G.route.id, idx:Math.round(G.credits), stars:G.starsEarned||0,
     pax:G.paxDropped||0, owa:G.owa||0, dist:Math.round(G.dist/UNITS_PER_M), ms:Math.round(G.t*1000),
     combo:G.topCombo||1, sig: G.sigDone ? 1 : 0, daily: G.dailyRun ? dailyPick().key : null,
+    trail: (G.dailyRun && G.trail && G.trail.length > 2) ? G.trail.slice(0, 1200) : null,
     name: save.name, anon: !(save.acct && save.acct.token) };
   if (G.dailyRun){
     save.daily = { key:dailyPick().key, done:true, score:Math.round(G.credits), rank:0 };
@@ -394,6 +445,36 @@ async function postScoreNow(verbose){
     if (G.dailyRun){ save.daily.rank = j.rank; persist(); }
     if (verbose || true) toast('Posted · world rank #' + j.rank + ' ' + (j.scope === 'daily' ? 'in today\'s daily run' : 'for ' + cityById(G.city.id).name), 2800);
   } else if (verbose) toast('Could not reach the board — score kept on this phone.', 2400);
+}
+/* ---------------- postcard: the place you just drove ----------------
+   Every run ends with a small piece of a real city — who holds the stop, what the
+   horn says, what people shout when they get off. That is the bit worth sending
+   to a friend, and it is the same card in Lagos, Cairo or New York. */
+function renderPostcard(c, r){
+  const box = $('#postcard'); if (!box) return;
+  const st = c.street, tk = (st && st.talk) || {};
+  const say = [['board', tk.board, tk.boardEn], ['thanks', tk.thanks, tk.thanksEn]]
+    .filter(function(x){ return !!x[1]; })
+    .map(function(x){ return '<span class="pcsay">' + x[1] + ' <i>' + (x[2] || '') + '</i></span>'; })
+    .join('  ·  ');
+  const crew = st && st.crew ? st.crew.name + ' <i>' + (st.crew.lineEn || '') + '</i>' : null;
+  const lastStop = (r.stopsNative && r.stopsNative[r.stopsNative.length - 1]) || r.stops[r.stops.length - 1];
+  box.innerHTML =
+    '<div class="postcard">' +
+      '<div class="pcstamp">' + c.flag + '</div>' +
+      '<h4>Postcard · ' + c.name + '</h4>' +
+      '<div class="pcsub">' + r.name + ' · ' + (c.country || '') + '</div>' +
+      '<div class="pcrow"><b>You drove</b><span>' + c.vehicle + ' · ' + c.cur.sym + ' ' + c.cur.code +
+        ' · ' + c.radio.name + '</span></div>' +
+      '<div class="pcrow"><b>Horn says</b><span class="nat">' + (c.slang ? c.slang.horn : '—') + '</span></div>' +
+      (crew ? '<div class="pcrow"><b>At the stop</b><span>' + crew + '</span></div>' : '') +
+      (say ? '<div class="pcrow"><b>They say</b><span>' + say + '</span></div>' : '') +
+      '<div class="pcrow"><b>Last stop</b><span class="nat sm">' + lastStop + '</span></div>' +
+      (st && st.bonus ? '<div class="pcrow"><b>Local trick</b><span>' + st.bonus.name + ' — ' + st.bonus.desc + '</span></div>' : '') +
+      '<button class="btn ghost sm pcshare" id="btnSharePc">📤 Send this postcard</button>' +
+    '</div>';
+  const b = $('#btnSharePc');
+  if (b) b.onclick = function(){ doShare({ credits:G.credits, city:c.id, idx:G.credits }); };
 }
 function showResult(d){
   const c = G.city, r = G.route;
@@ -430,6 +511,7 @@ function showResult(d){
     : 'Next star at <b>' + idx(tg[d.stars] != null ? tg[d.stars] : tg[2]) + '</b> fare index. ' +
       (G.missed ? 'You missed ' + G.missed + ' stop' + (G.missed>1?'s':'') + ' — drop them where they asked.' : 'Use the horn for OWA! combos to stack fare.');
   $('#btnPost').textContent = t('postScore');
+  renderPostcard(c, r);
   show('scr-result');
   renderHome();
   if (G.dailyRun || netAvailable()) postScoreNow(false);
@@ -546,7 +628,8 @@ function boot(){
   renderHome();
   $('#btnStart').onclick = function(){
     A.init(); A.resume();
-    if (!save.seenHow){ save.seenHow = true; persist(); show('scr-how'); }
+    if (!save.pickedHome){ renderWhere(); show('scr-where'); }
+    else if (!save.seenHow){ save.seenHow = true; persist(); show('scr-how'); }
     else show('scr-home');
   };
   $('#btnHowBoot').onclick = function(){ save.seenHow = true; persist(); show('scr-how'); };
@@ -611,6 +694,7 @@ function boot(){
   /* account + daily wiring */
   $('#btnGoAcct').onclick = function(){ show('scr-account'); };
   $('#btnGoAcct2').onclick = function(){ show('scr-account'); };
+  if ($('#btnGoWhere')) $('#btnGoWhere').onclick = function(){ renderWhere(); show('scr-where'); };
   $('#btnRegister').onclick = doRegister;
   $('#btnLogin').onclick = doLogin;
   $('#btnSignOut').onclick = function(){ acctSignOut(); toast('Signed out. Still playing offline.', 2000); renderAccount(); renderHome(); };
@@ -647,7 +731,10 @@ function playDaily(){
   G.dailyRun = true;
   lastPlay = { city:c.id, route:dp.route };
   startRun(c.id, dp.route);
-  toast('📅 Daily run · one shot', 2200);
+  toast('📅 Daily run · one shot · racing the world', 2600);
+  netGhost(dp.key).then(function(g){
+    if (g && g.trail && g.trail.length > 2 && G.dailyRun){ G.ghost = g; }
+  });
 }
 function installApp(){
   if (deferredPrompt){ deferredPrompt.prompt(); deferredPrompt = null; return; }

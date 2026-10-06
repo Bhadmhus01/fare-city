@@ -30,6 +30,8 @@ function startRun(cityId, routeIndex){
   G.idle = 0; G.topCombo = 1; G.perfectStops = 0; G.spawnedTo = 700; G.npcTo = 500;
   G.paxDropped = 0; G.boardQueue = 0; G.boardAcc = 0; G.waveN = 0; G.potholeSlow = 0;
   G.maxPax = 0; G.boardHorn = 0; G.crewsTax = 0; G.crewScattered = 0; G.sigDone = null;
+  G.trail = []; G.trailAcc = 0; G.ghost = null;      /* your line, and the world's best */
+  const gh = $('#ghost'); if (gh) gh.classList.remove('on');
   G.ev = null; G.evLeft = 0; G.evFx = {}; G.evT = 14 + rnd(0, 10);
   G.daySeed = hashStr(city.id + route.id + todayKey());
   G.sky = makeSkyline(city, G.daySeed); G.road = makeRoadside(city, G.daySeed);
@@ -523,7 +525,32 @@ function update(dt){
       p.mood = 2; buildHudSeats(); missPax(p);
     }
   });
+  if (G.dailyRun && G.trail.length < 1200){
+    G.trailAcc += dt;
+    if (G.trailAcc >= 0.5){ G.trailAcc -= 0.5; G.trail.push(Math.round(G.dist)); }
+  }
   updateHud();
+}
+/* ---------------- the world's best, on your route bar ----------------
+   The daily run is one route for everybody. The server keeps the leading line of
+   that route (a distance sample every half second); we race it live. */
+function ghostAt(t){
+  const tr = G.ghost && G.ghost.trail;
+  if (!tr || tr.length < 2) return null;
+  const x = t / 0.5, i = Math.floor(x);
+  if (i >= tr.length - 1) return tr[tr.length - 1];
+  return tr[i] + (tr[i+1] - tr[i]) * (x - i);
+}
+function updateGhost(){
+  const el = $('#ghost'); if (!el) return;
+  if (!G.dailyRun || G.mode !== 'run' || !G.ghost){ el.classList.remove('on'); return; }
+  const d = ghostAt(G.t);
+  if (d == null){ el.classList.remove('on'); return; }
+  el.style.left = (clamp(d / G.routeLen, 0, 1) * 100).toFixed(2) + '%';
+  el.classList.add('on');
+  const gap = d - G.dist, m = Math.round(Math.abs(gap) / UNITS_PER_M);
+  const lbl = $('#ghostD');
+  if (lbl) lbl.textContent = gap > 0 ? '🌍 +' + m + 'm' : '🌍 ' + m + 'm up';
 }
 let hudCache = {};
 function hudCond(title, sub){
@@ -550,6 +577,7 @@ function updateHud(){
   if (hudCache.kmh !== kmh){ $('#hudSpeed').textContent = kmh; hudCache.kmh = kmh; }
   const frac = clamp(G.dist / G.routeLen, 0, 1) * 100;
   $('#hudProg').style.width = frac.toFixed(1) + '%';
+  updateGhost();
   const money1 = money(G.credits, G.city);
   if (hudCache.money !== money1){ $('#fare').innerHTML = money1 + '<small id="fareLbl">' + t('fare').toUpperCase() + '</small>'; hudCache.money = money1; }
   const nxt = G.stops[Math.min(G.stopI, G.stops.length-1)];

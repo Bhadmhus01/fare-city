@@ -44,7 +44,9 @@ function routeReqStars(i){ return [0,2,4][i] || 99; }
 /* ---------------- progression ---------------- */
 function totalStars(){ let n=0; for (const k in save.routeStars) n += save.routeStars[k]; return n; }
 function cityStars(cityId){ const c=cityById(cityId); let n=0; c.routes.forEach(r=>n += save.routeStars[r.id]||0); return n; }
-function cityOpen(c){ return !c.starsReq || totalStars() >= c.starsReq; }
+/* your home city is always open: whatever you picked at the start is yours to
+   drive, wherever in the world you are. the rest unlock on stars. */
+function cityOpen(c){ return !c.starsReq || c.id === save.home || totalStars() >= c.starsReq; }
 function routeOpen(c, i){ return i===0 || cityStars(c.id) >= routeReqStars(i); }
 function nextCity(){ return CITY_PACKS.filter(c=>!cityOpen(c)).sort((a,b)=>a.starsReq-b.starsReq)[0]; }
 function rankOf(){ let r=RANKS[0]; RANKS.forEach(x=>{ if(totalStars()>=x.at) r=x; }); return r; }
@@ -64,6 +66,7 @@ function blankSave(){
     routeStars:{}, cityBest:{}, parts:{engine:0,brakes:0,tyres:0,horn:0,seats:0,tank:0},
     visited:{lagos:true}, missions:{date:'', list:[]}, mprog:{},
     streak:0, lastDay:'', runs:[], total:{runs:0,pax:0,credits:0,dist:0,owa:0,sigs:0},
+    home:'', pickedHome:0,
     lang:'en', acct:null, cloudAt:0, daily:{key:'',done:false,score:0,rank:0},
     set:{sfx:1,music:1,auto:1,left:0,calm:0,buzz:1,mv:70,sv:80,script:1},
     cookie:false, seenHow:false
@@ -77,6 +80,10 @@ function loadGame(){
     save.daily = Object.assign(blankSave().daily, p.daily||{});
     save.parts = Object.assign(blankSave().parts, p.parts||{});
   } }catch(e){}
+  /* saves from before home cities existed: keep Lagos, never re-ask a player
+     who has already made progress */
+  if (!save.home) save.home = 'lagos';
+  if (!save.pickedHome && (save.total.runs > 0 || totalStars() > 0)) save.pickedHome = 1;
   LANG = save.lang || 'en';
 }
 function persist(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }catch(e){} }
@@ -236,8 +243,9 @@ function postWorldScore(entry){
 
 /* ---------------- share ---------------- */
 function shareText(o){
-  return t('shareText', {v:money(o.credits||0, cityById(o.city)), bus:cityById(o.city).vehicle,
-    city:cityById(o.city).name, idx:idx(o.idx||0)});
+  const c = cityById(o.city), st = c.street || {}, tk = st.talk || {};
+  const phrase = tk.thanks ? '  ' + tk.thanks + ' (' + (tk.thanksEn || '') + ')' : '';
+  return t('shareText', {v:money(o.credits||0, c), bus:c.vehicle, city:c.name, idx:idx(o.idx||0)}) + phrase;
 }
 function doShare(o){
   const txt = shareText(o);

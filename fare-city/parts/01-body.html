@@ -1,10 +1,10 @@
 <!-- ============================ BOOT ============================ -->
 <div class="screen on" id="scr-boot" style="align-items:center;justify-content:center;text-align:center;gap:14px">
-  <div style="font-size:13px;font-weight:900;letter-spacing:.34em;color:var(--y);text-transform:uppercase">Lagos · 05:40</div>
+  <div style="font-size:13px;font-weight:900;letter-spacing:.34em;color:var(--y);text-transform:uppercase" id="bootKicker">One bus · ten cities</div>
   <h1 style="font-size:64px;text-shadow:0 5px 0 rgba(0,0,0,.4)">Fare<br><span class="hl">City</span></h1>
   <div class="sub" id="bootTag" style="max-width:300px">One bus. Every city.<br>Load them, drop them, collect your money.</div>
   <div style="display:flex;gap:8px;margin-top:4px">
-    <span class="chip">🇳🇬 Lagos to start</span><span class="chip d">10 cities</span>
+    <span class="chip" id="bootWhere">🌍 10 cities · pick yours</span><span class="chip d">No ads · offline</span>
   </div>
   <button class="btn" id="btnStart" style="max-width:300px;margin-top:12px">Tap to drive</button>
   <div class="row" style="gap:8px;margin-top:2px">
@@ -20,7 +20,7 @@
   <div class="hudtop">
     <div class="stub touch" id="hudRoute" style="flex:1">
       <div class="route" id="hudRouteName">Ojuelegba → Yaba</div>
-      <div class="prog"><i id="hudProg" style="width:0%"></i><div id="hudTicks" style="position:absolute;inset:0"></div></div>
+      <div class="prog"><i id="hudProg" style="width:0%"></i><div id="hudTicks" style="position:absolute;inset:0"></div><div id="ghost"><div class="pin"></div><div class="d" id="ghostD"></div></div></div>
       <div class="row b" style="margin-top:6px">
         <span id="cityTag" style="font-size:10.5px;font-weight:900;letter-spacing:.08em">🇳🇬 LAGOS</span>
         <span id="hudNext" style="font-size:10.5px;font-weight:800;opacity:.75">Next: …</span>
@@ -52,6 +52,18 @@
 </div>
 
 <!-- ============================ HOME ============================ -->
+<div class="screen" id="scr-where">
+  <div style="text-align:center;margin:10px 0 0">
+    <div class="lbl" style="letter-spacing:.2em">Step one</div>
+    <h2 style="font-size:25px;margin:5px 0 3px">Where do you drive first?</h2>
+    <div class="sub" style="max-width:330px;margin:0 auto">Your home city is open from the start — free. The other nine unlock as you earn stars, and your bus travels with you.</div>
+  </div>
+  <div class="scroll grow" style="margin:14px -4px 0;padding:0 4px 14px">
+    <div class="grid" id="whereList"></div>
+    <div class="tiny" style="text-align:center;margin-top:12px;opacity:.55">Not here yet? Every city is one data pack. Ask for your street.</div>
+  </div>
+</div>
+
 <div class="screen" id="scr-home" style="padding:14px 14px 12px">
   <div class="topline">
     <div class="brand">Fare City <small id="homeCityLbl">Lagos pilot</small></div>
@@ -86,6 +98,7 @@
           <div class="lbl">📅 Daily run · one shot</div>
           <div style="font-weight:900;font-size:14.5px;margin-top:2px" id="dailyTitle">—</div>
           <div class="tiny" id="dailySub">—</div>
+        <div class="tiny" id="dailyLive" style="margin-top:4px;color:#CFC4FF;font-weight:800"></div>
         </div>
         <button class="btn sm" id="btnDaily" style="width:auto">Drive</button>
       </div>
@@ -125,7 +138,7 @@
 <div class="screen" id="scr-map">
   <button class="ico x" data-back="scr-home">✕</button>
   <h2 style="margin-bottom:2px">The world</h2>
-  <div class="sub">Start in Lagos. Earn stars, ship your bus to new cities. The map scales with you.</div>
+  <div class="sub">Your home city is open. Earn stars to ship your bus around the world — 90 of them, ten cities.</div>
   <div class="scroll grow" style="margin:12px -4px 0;padding:0 4px 14px">
     <div class="ticket glass" style="margin-bottom:10px">
       <div class="row b"><span class="tiny" id="mapProgress">Lagos pilot · 0 of 90 stars</span>
@@ -133,8 +146,8 @@
     </div>
     <div class="grid" id="cityList"></div>
     <div class="ticket glass" style="margin-top:10px;text-align:center">
-      <div class="tiny">Missing your city? Every city is a data pack — bus, streets, slang, currency, radio.
-      It is one file to add one. Ask for your street.</div>
+      <div class="tiny">Missing your city? Every city is a data pack — bus, streets, slang, currency, radio, crew.
+      One file adds one. Ask for your street.</div>
     </div>
   </div>
 </div>
@@ -234,7 +247,8 @@
       <div class="lbl" style="color:var(--y);opacity:1;margin-bottom:5px">New in your world</div>
       <div id="resUnlockTxt" style="font-size:12.5px;font-weight:700;line-height:1.5"></div>
     </div>
-    <div class="row b" style="margin-top:13px;gap:8px">
+    <div id="postcard" style="margin-top:12px"></div>
+      <div class="row b" style="margin-top:13px;gap:8px">
       <button class="btn sm ghost" id="btnShareRes" style="flex:1">📤 Ticket</button>
       <button class="btn sm green" id="btnPost" style="flex:1">Post score</button>
     </div>
@@ -260,14 +274,14 @@
         <b>Drop them at their stop to get paid</b>
         <span>Every passenger has a destination shown on the left. Stop there and they pay. Skip it and conductor vex — half fare, no tip.</span></div></div>
       <div class="setrow"><b style="font-size:22px;width:34px">3</b><div class="grow">
-        <b>Press horn for OWA!</b>
-        <span>Honk near okada, hawkers and pedestrians to scatter them and build combo. Every 5 calls the multiplier climbs. Max fare index.</span></div></div>
+        <b>Press horn for <span id="howHorn">OWA!</span></b>
+        <span>Honk near riders, hawkers and pedestrians to scatter them and build combo. Every few calls the multiplier climbs. <span id="howHornLine"></span></span></div></div>
       <div class="setrow"><b style="font-size:22px;width:34px">4</b><div class="grow">
         <b>Swipe up to hop</b>
         <span>Hop potholes, speed bumps and barriers. One press, bus jumps. Potholes on the ground hurt the bus and slow you down.</span></div></div>
       <div class="setrow"><b style="font-size:22px;width:34px">5</b><div class="grow">
         <b>Horn the crew off your stop</b>
-        <span>Every city has its own people who work the stops — agberos in Lagos, matatu touts in Nairobi, a dabbawala with crates in Mumbai. While they hold the yellow box they take a slice of every fare and nobody boards. Horn them off and they run, and you keep the money.</span></div></div>
+        <span>Every city has its own people who work the stops — <span id="howCrew">agberos in Lagos, matatu touts in Nairobi, dabbawalas in Mumbai</span>. While they hold the yellow box they take a slice of every fare and nobody boards. Horn them off, or wait them out, and the stop is yours. <span id="howCrewLine"></span></span></div></div>
       <div class="setrow"><b style="font-size:22px;width:34px">6</b><div class="grow">
         <b>Ride out city conditions</b>
         <span>Rain in Lagos, khamsin dust in Cairo, monsoon in Mumbai, Songkran in Bangkok, a Tube strike in London. Each one changes grip, traffic, visibility or how many people want your bus, for about twenty seconds. The radio always warns you.</span></div></div>
@@ -389,6 +403,7 @@
       <button class="btn ghost sm" id="btnWipe">Reset progress</button>
     </div>
     <button class="btn sm ghost" id="btnGoAcct2" style="margin-top:10px">👤 Account, cloud save &amp; world board</button>
+    <button class="btn ghost sm" id="btnGoWhere" style="margin-top:8px">🌍 Change home city</button>
     <div class="ticket glass" style="margin-top:12px">
       <div class="tiny"><b>Fare City</b> v1.0 · offline-first · data packs for 10 cities and 30 routes out of the box.
       Leaderboard is local; flip one switch in the code to point it at a live API.</div>
