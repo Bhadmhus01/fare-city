@@ -225,6 +225,26 @@ English names.
 
 ---
 
+## Updating an installed copy
+
+A game you install to the home screen is a game you have to be able to update.
+The first service worker was cache-first with no revalidation, which meant an
+installed player would have kept **this** build for ever — a real bug, found by
+testing the upgrade path instead of assuming it.
+
+The worker now does the right thing per request type:
+
+* **Navigations: network-first.** Load the page from the network so a new build
+  arrives, refresh both the navigation entry *and* `./index.html` in the cache,
+  then fall back to the cache when there is no signal. The offline shell can
+  never lag behind the live build.
+* **Everything else (icons, manifest): cache-first**, refreshed in the background.
+
+`qa/live-update.js` proves it against the **deployed** site: it poisons the cache
+with a fake old build, reloads, and asserts the new build wins *and* that the
+stale entry was replaced — then cuts the network and checks the game still opens.
+10/10.
+
 ## Accounts, cloud saves and the world board (what is actually real)
 
 The game ships with a **working server**, not a stub: `server/server.js`, ~370
