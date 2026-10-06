@@ -1,0 +1,9 @@
+# Netlify / Cloudflare Pages: correct content types for the PWA pieces.
+# (GitHub Pages ignores this file; iOS install works regardless — Safari uses the
+#  apple-touch-icon and meta tags, not the manifest.)
+/manifest.webmanifest
+  Content-Type: application/manifest+json
+/sw.js
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache

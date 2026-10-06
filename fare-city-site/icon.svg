@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#14141A"/>
+  <circle cx="256" cy="256" r="176" fill="#FFD23D"/>
+  <rect x="140" y="196" width="232" height="150" rx="28" fill="#F2A900" stroke="#14141A" stroke-width="14"/>
+  <rect x="164" y="220" width="184" height="58" rx="12" fill="#9ED3EE"/>
+  <circle cx="192" cy="358" r="30" fill="#14141A"/>
+  <circle cx="320" cy="358" r="30" fill="#14141A"/>
+  <rect x="176" y="292" width="160" height="22" rx="8" fill="#14141A"/>
+  <text x="256" y="308" font-family="system-ui,sans-serif" font-size="20" font-weight="900" fill="#FFD23D" text-anchor="middle">OWA!</text>
+</svg>
