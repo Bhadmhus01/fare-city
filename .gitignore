@@ -1,7 +1,13 @@
+# local state — must never be committed
 server/data/
 fare-city/server/data/
 node_modules/
+
+# build artifact that keeps getting re-uploaded
 fare-city-site.zip
+
+# workspace scratch
 qa/shots/
 qa/world/
 uploads/
+.DS_Store

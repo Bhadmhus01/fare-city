@@ -1,5 +1,30 @@
 # Put Fare City on the internet (so your iPhone can install it)
 
+## If GitHub Pages shows "File not found" (404)
+
+GitHub Pages is serving, but there is no `index.html` at the path you opened. Two
+causes, both easy to check from the repo:
+
+1. **Only the zip got uploaded.** GitHub does not unzip anything — if the repo file
+   list shows `fare-city-site.zip`, the site has no files at all. Fix: upload the
+   extracted files, or simply upload **`index.html` on its own** (see below).
+2. **The files are inside a folder.** If you dragged the folder, the game lives at
+   `https://USER.github.io/REPO/fare-city-site/` — try that URL first.
+
+### The one-file fix (minimum that cannot go wrong)
+
+`index.html` is the *entire* game: it makes no requests for any local file, and the
+service-worker and icon links are optional extras. So:
+
+1. Repo → **Add file → Upload files** → choose **just `index.html`** → Commit.
+2. Settings → **Pages** → Branch `main`, folder **/ (root)** → Save.
+3. Open `https://USER.github.io/REPO/` in Safari (give it a minute; the **Actions**
+   tab shows the green "pages build and deployment" run).
+
+You get a fully playable, installable game. Then, if you want the proper icon and
+offline play, upload `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`,
+`manifest.webmanifest` and `sw.js` as well — same screen, same commit.
+
 > **Getting "Page not found" (404) from Netlify?** That means the upload landed
 > empty — every file including `index.html` was missing. Use
 > **`fare-city-site.zip`** (rebuilt so the files sit at the *root* of the zip, not
